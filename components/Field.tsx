@@ -23,9 +23,10 @@ type FieldProps = {
     isTail?: boolean;
     isVertical?: boolean;
   })[];
+  shots?: { [key: string]: "hit" | "miss" };
 };
 
-export function Field({ shipSegments = [] }: FieldProps) {
+export function Field({ shipSegments = [], shots = {} }: FieldProps) {
   // Helper to find segment at specific coordinate
   const findSegmentAt = (
     row: number,
@@ -44,6 +45,16 @@ export function Field({ shipSegments = [] }: FieldProps) {
     const coordinate = `${letter}${col}`;
 
     return shipSegments.find((segment) => segment.coordinate === coordinate);
+  };
+
+  // Check if a coordinate has been shot at
+  const getShotStatus = (row: number, col: number): "hit" | "miss" | null => {
+    if (row >= NUM_ROWS - 1 || col === 0) return null; // Skip labels
+
+    const letter = String.fromCharCode(65 + row); // Convert 0-9 to A-J
+    const coordinate = `${letter}${col}`;
+
+    return shots[coordinate] || null;
   };
 
   // Get color for ship segment based on ship name
@@ -79,6 +90,18 @@ export function Field({ shipSegments = [] }: FieldProps) {
     );
   };
 
+  // Render a miss marker (circle with X)
+  const renderMissMarker = () => {
+    return (
+      <View style={styles.missContainer}>
+        <View style={styles.missCircle}>
+          <View style={styles.missX1} />
+          <View style={styles.missX2} />
+        </View>
+      </View>
+    );
+  };
+
   // Create a 10x10 grid of squares with coordinates
   const renderSquares = () => {
     const rows = [];
@@ -103,12 +126,13 @@ export function Field({ shipSegments = [] }: FieldProps) {
         } else {
           // Regular grid cells - check if there's a ship segment here
           const segment = findSegmentAt(r, c);
+          const shotStatus = getShotStatus(r, c);
 
           let squareStyle: ViewStyle = { ...styles.square };
           let content = null;
 
           if (segment) {
-            if (segment.status === "damaged") {
+            if (segment.status === "damaged" || shotStatus === "hit") {
               squareStyle.backgroundColor = "rgba(255, 0, 0, 0.7)"; // Red for damaged
               content = renderStar(); // Add star for damaged segments
             } else {
@@ -126,6 +150,9 @@ export function Field({ shipSegments = [] }: FieldProps) {
                 content = <View style={styles.tailIndicator} />;
               }
             }
+          } else if (shotStatus === "miss") {
+            // Show miss marker
+            content = renderMissMarker();
           }
 
           cells.push(
@@ -213,5 +240,34 @@ const styles = StyleSheet.create({
     borderBottomColor: "yellow",
     left: 0,
     top: 0,
+  },
+  missContainer: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  missCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "navy",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  missX1: {
+    position: "absolute",
+    width: 16,
+    height: 2,
+    backgroundColor: "navy",
+    transform: [{ rotate: "45deg" }],
+  },
+  missX2: {
+    position: "absolute",
+    width: 16,
+    height: 2,
+    backgroundColor: "navy",
+    transform: [{ rotate: "-45deg" }],
   },
 });

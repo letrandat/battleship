@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -10,12 +10,15 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { GameBoard } from "@/components/GameBoard";
+import { Ship } from "@/components/Ship";
 
 export default function GameScreen() {
   const [coordinate, setCoordinate] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [isHumanTurn, setIsHumanTurn] = useState(true); // Human starts first
+  const [gameStarted, setGameStarted] = useState(false);
+  const gameBoardRef = useRef<any>(null);
 
   const isValidCoordinate = (coord: string) => {
     // Check format like A1, B7, etc. (A-J and 1-10)
@@ -23,7 +26,50 @@ export default function GameScreen() {
     return pattern.test(coord);
   };
 
+  const checkForHit = (coord: string, botShips: Ship[]) => {
+    // Normalize coordinate to uppercase
+    const normalizedCoord = coord.toUpperCase();
+
+    // Check if any ship segment is at this coordinate
+    for (const ship of botShips) {
+      const hitSegmentIndex = ship.segments.findIndex(
+        (segment) => segment.coordinate === normalizedCoord
+      );
+
+      if (hitSegmentIndex >= 0) {
+        // Found a hit!
+        const shipSegment = ship.segments[hitSegmentIndex];
+        // Mark segment as damaged
+        shipSegment.status = "damaged";
+
+        let hitMessage = `HIT! You struck the ${ship.name}`;
+        if (ship.isDestroyed) {
+          hitMessage += ` and SUNK it!`;
+        }
+
+        return {
+          hit: true,
+          message: hitMessage,
+          shipName: ship.name,
+        };
+      }
+    }
+
+    // No hit found
+    return {
+      hit: false,
+      message: "MISS! Your shot didn't hit any ships.",
+      shipName: null,
+    };
+  };
+
   const handleSubmit = () => {
+    if (!gameStarted) {
+      setModalMessage("Please start the game first.");
+      setModalVisible(true);
+      return;
+    }
+
     if (!isHumanTurn) {
       setModalMessage("It's not your turn! Please wait for the bot to play.");
       setModalVisible(true);
@@ -31,15 +77,65 @@ export default function GameScreen() {
     }
 
     if (isValidCoordinate(coordinate)) {
-      console.log("Valid coordinate entered:", coordinate);
-      // Human's turn is done, switch to bot's turn
-      setIsHumanTurn(false);
+      const normalizedCoord = coordinate.toUpperCase();
 
-      // Simulate bot's turn after a delay
-      setTimeout(() => {
-        console.log("Bot played its turn");
-        setIsHumanTurn(true); // Switch back to human turn
-      }, 2000);
+      // Check if this coordinate was already shot at
+      if (
+        gameBoardRef.current &&
+        gameBoardRef.current.getRightFieldShots()[normalizedCoord]
+      ) {
+        setModalMessage(
+          `You already fired at ${normalizedCoord}. Try a different coordinate.`
+        );
+        setModalVisible(true);
+        return;
+      }
+
+      if (gameBoardRef.current) {
+        const botShips = gameBoardRef.current.getRightPlayerShips();
+
+        const result = checkForHit(normalizedCoord, botShips);
+
+        // Record the shot in the game board
+        gameBoardRef.current.recordShot(
+          normalizedCoord,
+          result.hit ? "hit" : "miss",
+          true // true means it's the player's shot
+        );
+
+        // Display result message
+        setModalMessage(result.message);
+        setModalVisible(true);
+
+        // Human's turn is done, switch to bot's turn
+        setIsHumanTurn(false);
+
+        // Simulate bot's turn after a delay
+        setTimeout(() => {
+          // Bot makes a random shot
+          const botShot = generateBotShot();
+          if (botShot) {
+            const playerShips = gameBoardRef.current.getLeftPlayerShips();
+            const botShotResult = checkBotShot(botShot, playerShips);
+
+            // Record bot's shot
+            gameBoardRef.current.recordShot(
+              botShot,
+              botShotResult.hit ? "hit" : "miss",
+              false // false means it's the bot's shot
+            );
+
+            console.log(
+              `Bot fired at ${botShot}: ${botShotResult.hit ? "HIT" : "MISS"}`
+            );
+          }
+
+          setIsHumanTurn(true); // Switch back to human turn
+        }, 2000);
+      } else {
+        setModalMessage("Game not initialized yet. Please wait.");
+        setModalVisible(true);
+      }
     } else {
       setModalMessage(
         "Please enter a valid coordinate like A1, B7, etc. (A-J and 1-10)"
@@ -47,6 +143,67 @@ export default function GameScreen() {
       setModalVisible(true);
       console.error("Invalid coordinate:", coordinate);
     }
+  };
+
+  // Generate a random coordinate for the bot's shot
+  const generateBotShot = (): string | null => {
+    if (!gameBoardRef.current) return null;
+
+    const existingShots = gameBoardRef.current.getLeftFieldShots();
+    let attempts = 0;
+
+    while (attempts < 100) {
+      // Generate random row (A-J) and column (1-10)
+      const row = String.fromCharCode(65 + Math.floor(Math.random() * 10));
+      const col = 1 + Math.floor(Math.random() * 10);
+      const coord = `${row}${col}`;
+
+      // Check if this coordinate hasn't been targeted yet
+      if (!existingShots[coord]) {
+        return coord;
+      }
+
+      attempts++;
+    }
+
+    // If we reach here, couldn't find a new coordinate (unlikely)
+    console.error("Bot couldn't find a valid shot coordinate");
+    return null;
+  };
+
+  // Check if the bot's shot hit any player ships
+  const checkBotShot = (coord: string, playerShips: Ship[]) => {
+    // Normalize coordinate
+    const normalizedCoord = coord.toUpperCase();
+
+    // Check if any ship segment is at this coordinate
+    for (const ship of playerShips) {
+      const hitSegmentIndex = ship.segments.findIndex(
+        (segment) => segment.coordinate === normalizedCoord
+      );
+
+      if (hitSegmentIndex >= 0) {
+        // Found a hit!
+        const shipSegment = ship.segments[hitSegmentIndex];
+        // Mark segment as damaged
+        shipSegment.status = "damaged";
+
+        return {
+          hit: true,
+          shipName: ship.name,
+        };
+      }
+    }
+
+    // No hit found
+    return {
+      hit: false,
+      shipName: null,
+    };
+  };
+
+  const handleGameStart = () => {
+    setGameStarted(true);
   };
 
   return (
@@ -68,16 +225,17 @@ export default function GameScreen() {
           value={coordinate}
           onChangeText={setCoordinate}
           placeholder="Enter coordinate (e.g., A5)"
-          editable={isHumanTurn} // Only allow input during human's turn
+          editable={isHumanTurn && gameStarted} // Only allow input during human's turn and when game started
         />
         <Button
           title="Boom"
           onPress={handleSubmit}
           color="red"
-          disabled={!isHumanTurn} // Disable button during bot's turn
+          disabled={!isHumanTurn || !gameStarted} // Disable button during bot's turn or before game starts
         />
       </View>
-      <GameBoard />
+
+      <GameBoard ref={gameBoardRef} onGameStart={handleGameStart} />
 
       {/* Custom Modal */}
       <Modal
