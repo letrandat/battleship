@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   View,
-  TextInput,
-  Button,
   Modal,
   TouchableOpacity,
   Animated,
@@ -391,22 +389,6 @@ export default function GameScreen() {
         </ThemedText>
       </View>
 
-      <View style={styles.headerContainer}>
-        <TextInput
-          style={styles.input}
-          value={coordinate}
-          onChangeText={setCoordinate}
-          placeholder="Enter coordinate (e.g., A5)"
-          editable={isHumanTurn && gameStarted} // Only allow input during human's turn and when game started
-        />
-        <Button
-          title="Boom"
-          onPress={handleSubmit}
-          color="red"
-          disabled={!isHumanTurn || !gameStarted} // Disable button during bot's turn or before game starts
-        />
-      </View>
-
       <GameBoard
         ref={gameBoardRef}
         onGameStart={handleGameStart}
@@ -479,20 +461,6 @@ const styles = StyleSheet.create({
   },
   inactiveStatus: {
     color: "red",
-  },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-    flex: 1,
-    backgroundColor: "white",
   },
   centeredView: {
     flex: 1,
