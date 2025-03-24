@@ -5,9 +5,9 @@ export function Field() {
   // Create a 10x10 grid of squares
   const renderSquares = () => {
     const rows = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 11; i++) {
       const cells = [];
-      for (let j = 0; j < 10; j++) {
+      for (let j = 0; j < 11; j++) {
         cells.push(<View key={`${i}-${j}`} style={styles.square} />);
       }
       rows.push(

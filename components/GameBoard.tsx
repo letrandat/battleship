@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   },
   fieldContainer: {
     width: "50%",
-    height: "50%",
+    height: "45%",
     padding: 3, // Minimum padding to maximize grid space
   },
   dividerLine: {
