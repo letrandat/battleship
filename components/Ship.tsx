@@ -1,70 +1,56 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+// Ship data structure definitions
 
-type ShipProps = {
-  length: 2 | 3 | 4 | 5;
-  isVertical?: boolean;
+export type Coordinate = string; // e.g., "A1", "B4"
+export type SegmentStatus = "healthy" | "damaged";
+
+export type ShipSegment = {
+  coordinate: Coordinate;
+  status: SegmentStatus;
 };
 
-export function Ship({ length, isVertical = false }: ShipProps) {
-  const renderShipSegments = () => {
-    const segments = [];
-    for (let i = 0; i < length; i++) {
-      segments.push(
-        <View
-          key={`segment-${i}`}
-          style={[
-            styles.segment,
-            i === 0 && (isVertical ? styles.topSegment : styles.leftSegment),
-            i === length - 1 &&
-              (isVertical ? styles.bottomSegment : styles.rightSegment),
-          ]}
-        />
+export type Ship = {
+  segments: ShipSegment[]; // Array of segments in order from head to tail
+
+  // Helper properties (can be computed)
+  get isVertical(): boolean;
+  get head(): ShipSegment;
+  get tail(): ShipSegment;
+  get body(): ShipSegment[];
+  get isDestroyed(): boolean;
+};
+
+// Ship factory function
+export function createShip(coordinates: Coordinate[]): Ship {
+  const segments: ShipSegment[] = coordinates.map((coordinate) => ({
+    coordinate,
+    status: "healthy",
+  }));
+
+  return {
+    segments,
+
+    get isVertical() {
+      return (
+        this.segments.length > 1 &&
+        this.segments[0].coordinate.charAt(0) ===
+          this.segments[1].coordinate.charAt(0)
       );
-    }
-    return segments;
+    },
+
+    get head() {
+      return this.segments[0];
+    },
+
+    get tail() {
+      return this.segments[this.segments.length - 1];
+    },
+
+    get body() {
+      return this.segments.slice(1, -1);
+    },
+
+    get isDestroyed() {
+      return this.segments.every((segment) => segment.status === "damaged");
+    },
   };
-
-  return (
-    <View
-      style={[styles.ship, isVertical ? styles.vertical : styles.horizontal]}
-    >
-      {renderShipSegments()}
-    </View>
-  );
 }
-
-const styles = StyleSheet.create({
-  ship: {
-    backgroundColor: "#555",
-  },
-  horizontal: {
-    flexDirection: "row",
-  },
-  vertical: {
-    flexDirection: "column",
-  },
-  segment: {
-    width: 30,
-    height: 30,
-    backgroundColor: "#555",
-    borderWidth: 1,
-    borderColor: "#333",
-  },
-  leftSegment: {
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
-  },
-  rightSegment: {
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  topSegment: {
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-  },
-  bottomSegment: {
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-});
