@@ -9,8 +9,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
-            title: "Battleship",
-            headerShown: true,
+            headerShown: false,
           }}
         />
       </Stack>

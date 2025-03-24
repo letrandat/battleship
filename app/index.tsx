@@ -15,6 +15,7 @@ export default function GameScreen() {
   const [coordinate, setCoordinate] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [isHumanTurn, setIsHumanTurn] = useState(true); // Human starts first
 
   const isValidCoordinate = (coord: string) => {
     // Check format like A1, B7, etc. (A-J and 1-10)
@@ -23,8 +24,22 @@ export default function GameScreen() {
   };
 
   const handleSubmit = () => {
+    if (!isHumanTurn) {
+      setModalMessage("It's not your turn! Please wait for the bot to play.");
+      setModalVisible(true);
+      return;
+    }
+
     if (isValidCoordinate(coordinate)) {
       console.log("Valid coordinate entered:", coordinate);
+      // Human's turn is done, switch to bot's turn
+      setIsHumanTurn(false);
+
+      // Simulate bot's turn after a delay
+      setTimeout(() => {
+        console.log("Bot played its turn");
+        setIsHumanTurn(true); // Switch back to human turn
+      }, 2000);
     } else {
       setModalMessage(
         "Please enter a valid coordinate like A1, B7, etc. (A-J and 1-10)"
@@ -36,14 +51,31 @@ export default function GameScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <View style={styles.statusContainer}>
+        <ThemedText
+          style={[
+            styles.statusText,
+            isHumanTurn ? styles.activeStatus : styles.inactiveStatus,
+          ]}
+        >
+          {isHumanTurn ? "Your Turn" : "Bot Turn"}
+        </ThemedText>
+      </View>
+
       <View style={styles.headerContainer}>
         <TextInput
           style={styles.input}
           value={coordinate}
           onChangeText={setCoordinate}
           placeholder="Enter coordinate (e.g., A5)"
+          editable={isHumanTurn} // Only allow input during human's turn
         />
-        <Button title="Boom" onPress={handleSubmit} color="red" />
+        <Button
+          title="Boom"
+          onPress={handleSubmit}
+          color="red"
+          disabled={!isHumanTurn} // Disable button during bot's turn
+        />
       </View>
       <GameBoard />
 
@@ -56,7 +88,7 @@ export default function GameScreen() {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <ThemedText style={styles.modalText}>Invalid Coordinate</ThemedText>
+            <ThemedText style={styles.modalText}>Game Message</ThemedText>
             <ThemedText style={styles.modalMessage}>{modalMessage}</ThemedText>
 
             <TouchableOpacity
@@ -77,6 +109,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 20,
+  },
+  statusContainer: {
+    marginBottom: 15,
+    paddingVertical: 10,
+    width: "100%",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  statusText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  activeStatus: {
+    color: "green",
+  },
+  inactiveStatus: {
+    color: "red",
   },
   headerContainer: {
     flexDirection: "row",
