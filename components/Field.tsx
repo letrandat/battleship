@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 
 // Constants for grid size
-const NUM_ROWS = 10;
+const NUM_ROWS = 11;
 const NUM_COLS = 11;
 
 export function Field() {
@@ -19,7 +19,7 @@ export function Field() {
               <Text style={styles.coordinateText}>{c}</Text>
             </View>
           );
-        } else if (c === 0) {
+        } else if (c === 0 && r !== NUM_ROWS - 1) {
           // First column for letter coordinates (A-J)
           const letter = String.fromCharCode(65 + r); // 'A' starts at 65 in ASCII
           cells.push(
