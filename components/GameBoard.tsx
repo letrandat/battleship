@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
 import { Field } from "./Field";
-import { Ship, Coordinate } from "./Ship";
+import { Ship } from "./Ship";
 import { generatePlayerShips } from "../utils/shipUtils";
 
 type GameBoardProps = {
@@ -129,6 +129,7 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
         onGameStart();
       }
 
+      /* 
       // Log ship information
       console.log("Left player ships:");
       leftShips.forEach((ship) => {
@@ -141,6 +142,7 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
         console.log(ship.toString());
         console.log("-".repeat(30));
       });
+      */
     };
 
     // Get hit ships to always display, even when showRightShips is false
