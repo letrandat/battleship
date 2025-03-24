@@ -20,8 +20,13 @@ const SHIPS = [
 
 export function GameBoard() {
   const [gameStarted, setGameStarted] = useState(false);
-  const [playerShips, setPlayerShips] = useState<Ship[]>([]);
-  const [shipCoordinates, setShipCoordinates] = useState<string[]>([]);
+  const [leftPlayerShips, setLeftPlayerShips] = useState<Ship[]>([]);
+  const [rightPlayerShips, setRightPlayerShips] = useState<Ship[]>([]);
+  const [leftShipCoordinates, setLeftShipCoordinates] = useState<string[]>([]);
+  const [rightShipCoordinates, setRightShipCoordinates] = useState<string[]>(
+    []
+  );
+  const [showRightShips, setShowRightShips] = useState(false);
 
   // Generate a random coordinate (e.g., "A1", "B5")
   const generateRandomCoordinate = (): Coordinate => {
@@ -101,10 +106,9 @@ export function GameBoard() {
     return [];
   };
 
-  const placeShips = () => {
+  // Generate ships for a player
+  const generatePlayerShips = (): Ship[] => {
     const ships: Ship[] = [];
-    const allCoordinates: string[] = [];
-    const shipDetails: { name: string; coordinates: string[] }[] = [];
 
     // Place each ship
     for (const ship of SHIPS) {
@@ -112,20 +116,42 @@ export function GameBoard() {
       if (coordinates.length === ship.size) {
         const newShip = createShip(coordinates, ship.name);
         ships.push(newShip);
-        allCoordinates.push(...coordinates);
-        shipDetails.push({ name: ship.name, coordinates: [...coordinates] });
       }
     }
 
-    setPlayerShips(ships);
-    setShipCoordinates(allCoordinates);
+    return ships;
+  };
+
+  const placeShips = () => {
+    // Generate ships for left player
+    const leftShips = generatePlayerShips();
+    const leftCoordinates = leftShips.flatMap((ship) =>
+      ship.segments.map((segment) => segment.coordinate)
+    );
+
+    // Generate ships for right player
+    const rightShips = generatePlayerShips();
+    const rightCoordinates = rightShips.flatMap((ship) =>
+      ship.segments.map((segment) => segment.coordinate)
+    );
+
+    setLeftPlayerShips(leftShips);
+    setRightPlayerShips(rightShips);
+    setLeftShipCoordinates(leftCoordinates);
+    setRightShipCoordinates(rightCoordinates);
     setGameStarted(true);
 
-    // Log ship information using the toString method
-    console.log("Ships placed:");
-    ships.forEach((ship) => {
+    // Log ship information
+    console.log("Left player ships:");
+    leftShips.forEach((ship) => {
       console.log(ship.toString());
-      console.log("-".repeat(30)); // Separator for better readability
+      console.log("-".repeat(30));
+    });
+
+    console.log("Right player ships:");
+    rightShips.forEach((ship) => {
+      console.log(ship.toString());
+      console.log("-".repeat(30));
     });
   };
 
@@ -134,7 +160,7 @@ export function GameBoard() {
       <View style={styles.boardContainer}>
         <View style={styles.fieldContainer}>
           <Field
-            shipSegments={playerShips.flatMap((ship) =>
+            shipSegments={leftPlayerShips.flatMap((ship) =>
               ship.segments.map((segment, index, array) => ({
                 ...segment,
                 shipName: ship.name,
@@ -146,7 +172,21 @@ export function GameBoard() {
           />
         </View>
         <View style={styles.fieldContainer}>
-          <Field />
+          <Field
+            shipSegments={
+              showRightShips
+                ? rightPlayerShips.flatMap((ship) =>
+                    ship.segments.map((segment, index, array) => ({
+                      ...segment,
+                      shipName: ship.name,
+                      isHead: index === 0,
+                      isTail: index === array.length - 1,
+                      isVertical: ship.isVertical,
+                    }))
+                  )
+                : []
+            }
+          />
         </View>
       </View>
       <View style={styles.dividerLine} />
@@ -154,6 +194,17 @@ export function GameBoard() {
       {!gameStarted && (
         <TouchableOpacity style={styles.startButton} onPress={placeShips}>
           <Text style={styles.buttonText}>Start Game</Text>
+        </TouchableOpacity>
+      )}
+
+      {gameStarted && (
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={() => setShowRightShips(!showRightShips)}
+        >
+          <Text style={styles.buttonText}>
+            {showRightShips ? "Hide" : "Show"} Opponent's Ships
+          </Text>
         </TouchableOpacity>
       )}
     </View>
@@ -205,5 +256,15 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  toggleButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    backgroundColor: "#f44336",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignItems: "center",
   },
 });
