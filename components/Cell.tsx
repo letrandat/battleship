@@ -1,5 +1,11 @@
 import React from "react";
-import { StyleSheet, View, Text, ViewStyle } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  ViewStyle,
+  TouchableOpacity,
+} from "react-native";
 import { ShipSegment, SHIP_COLORS } from "./Ship";
 
 type ShotInfo = {
@@ -37,6 +43,15 @@ export function Cell({
     return (
       SHIP_COLORS[shipName as keyof typeof SHIP_COLORS] || SHIP_COLORS.default
     );
+  };
+
+  // Handle cell click
+  const handleCellPress = () => {
+    if (isCoordinateLabel) return; // Don't log clicks on labels
+
+    const letter = String.fromCharCode(65 + row); // Convert 0-9 to A-J
+    const coordinate = `${letter}${col}`;
+    console.log(`Cell clicked: ${coordinate}`);
   };
 
   // Render a 5-point star
@@ -143,7 +158,12 @@ export function Cell({
     content = renderMissMarker();
   }
 
-  return <View style={squareStyle}>{content}</View>;
+  // For interactive grid cells, use TouchableOpacity to handle presses
+  return (
+    <TouchableOpacity style={squareStyle} onPress={handleCellPress}>
+      {content}
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
