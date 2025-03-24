@@ -16,17 +16,29 @@ const SHIP_COLORS = {
   default: "rgba(100, 149, 237, 0.3)", // Default Light Blue
 };
 
+type ShotInfo = {
+  result: "hit" | "miss";
+  isSunk: boolean;
+  shipName?: string;
+};
+
 type FieldProps = {
   shipSegments?: (ShipSegment & {
     shipName?: string;
     isHead?: boolean;
     isTail?: boolean;
     isVertical?: boolean;
+    isShipSunk?: boolean;
   })[];
-  shots?: { [key: string]: "hit" | "miss" };
+  shots?: { [key: string]: ShotInfo };
+  sunkShips?: string[];
 };
 
-export function Field({ shipSegments = [], shots = {} }: FieldProps) {
+export function Field({
+  shipSegments = [],
+  shots = {},
+  sunkShips = [],
+}: FieldProps) {
   // Helper to find segment at specific coordinate
   const findSegmentAt = (
     row: number,
@@ -37,6 +49,7 @@ export function Field({ shipSegments = [], shots = {} }: FieldProps) {
         isHead?: boolean;
         isTail?: boolean;
         isVertical?: boolean;
+        isShipSunk?: boolean;
       })
     | undefined => {
     if (row >= NUM_ROWS - 1 || col === 0) return undefined; // Skip labels
@@ -48,7 +61,7 @@ export function Field({ shipSegments = [], shots = {} }: FieldProps) {
   };
 
   // Check if a coordinate has been shot at
-  const getShotStatus = (row: number, col: number): "hit" | "miss" | null => {
+  const getShotInfo = (row: number, col: number): ShotInfo | null => {
     if (row >= NUM_ROWS - 1 || col === 0) return null; // Skip labels
 
     const letter = String.fromCharCode(65 + row); // Convert 0-9 to A-J
@@ -91,13 +104,14 @@ export function Field({ shipSegments = [], shots = {} }: FieldProps) {
   };
 
   // Render an enhanced hit marker with explosion effect
-  const renderHitMarker = (shipName?: string) => {
+  const renderHitMarker = (shipName?: string, isShipSunk: boolean = false) => {
     return (
       <View style={styles.hitContainer}>
         {renderStar()}
         <View style={styles.explosionOuter} />
         <View style={styles.explosionInner} />
-        {shipName && (
+        {/* Only show ship name initial if the ship is sunk */}
+        {isShipSunk && shipName && (
           <Text style={styles.hitShipName}>{shipName.charAt(0)}</Text>
         )}
       </View>
@@ -140,15 +154,24 @@ export function Field({ shipSegments = [], shots = {} }: FieldProps) {
         } else {
           // Regular grid cells - check if there's a ship segment here
           const segment = findSegmentAt(r, c);
-          const shotStatus = getShotStatus(r, c);
+          const shotInfo = getShotInfo(r, c);
+          const shotStatus = shotInfo ? shotInfo.result : null;
+
+          const coordinate = `${String.fromCharCode(65 + r)}${c}`;
 
           let squareStyle: ViewStyle = { ...styles.square };
           let content = null;
 
           if (segment) {
+            const isShipSunk =
+              !!segment.isShipSunk ||
+              !!(segment.shipName && sunkShips.includes(segment.shipName));
+
             if (segment.status === "damaged" || shotStatus === "hit") {
-              squareStyle.backgroundColor = "rgba(255, 0, 0, 0.9)"; // Brighter red for damaged
-              content = renderHitMarker(segment.shipName); // Enhanced hit marker with ship info
+              // Bright red for hit/damaged segments
+              squareStyle.backgroundColor = "rgba(255, 0, 0, 0.9)";
+              // Enhanced hit marker with ship info only shown if ship is sunk
+              content = renderHitMarker(segment.shipName, isShipSunk);
             } else {
               // Apply custom color based on ship name
               squareStyle.backgroundColor = getShipColor(segment.shipName);

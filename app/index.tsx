@@ -23,7 +23,8 @@ export default function GameScreen() {
     visible: boolean;
     message: string;
     shipName: string | null;
-  }>({ visible: false, message: "", shipName: null });
+    isSunk: boolean;
+  }>({ visible: false, message: "", shipName: null, isSunk: false });
 
   // Animation values
   const notificationOpacity = useRef(new Animated.Value(0)).current;
@@ -89,15 +90,19 @@ export default function GameScreen() {
         // Mark segment as damaged
         shipSegment.status = "damaged";
 
-        let hitMessage = `HIT! You struck the ${ship.name}`;
-        if (ship.isDestroyed) {
-          hitMessage += ` and SUNK it!`;
-        }
+        // Check if the ship is now completely destroyed
+        const isSunk = ship.isDestroyed;
+
+        // Only reveal ship name if it's sunk
+        let hitMessage = isSunk
+          ? `HIT and SUNK! You've completely destroyed the enemy's ${ship.name}!`
+          : "HIT! You struck an enemy ship!";
 
         return {
           hit: true,
           message: hitMessage,
           shipName: ship.name,
+          isSunk: isSunk,
         };
       }
     }
@@ -107,6 +112,7 @@ export default function GameScreen() {
       hit: false,
       message: "MISS! Your shot didn't hit any ships.",
       shipName: null,
+      isSunk: false,
     };
   };
 
@@ -147,7 +153,9 @@ export default function GameScreen() {
         gameBoardRef.current.recordShot(
           normalizedCoord,
           result.hit ? "hit" : "miss",
-          true // true means it's the player's shot
+          true, // true means it's the player's shot
+          result.isSunk, // pass whether the ship is sunk
+          result.shipName // pass the ship name (only used if isSunk is true)
         );
 
         // Show hit notification if it's a hit
@@ -156,6 +164,7 @@ export default function GameScreen() {
             visible: true,
             message: result.message,
             shipName: result.shipName,
+            isSunk: result.isSunk,
           });
         }
 
@@ -181,11 +190,15 @@ export default function GameScreen() {
             gameBoardRef.current.recordShot(
               botShot,
               botShotResult.hit ? "hit" : "miss",
-              false // false means it's the bot's shot
+              false, // false means it's the bot's shot
+              botShotResult.isSunk,
+              botShotResult.shipName
             );
 
             console.log(
-              `Bot fired at ${botShot}: ${botShotResult.hit ? "HIT" : "MISS"}`
+              `Bot fired at ${botShot}: ${botShotResult.hit ? "HIT" : "MISS"}${
+                botShotResult.isSunk ? " and SUNK!" : ""
+              }`
             );
           }
 
@@ -247,9 +260,13 @@ export default function GameScreen() {
         // Mark segment as damaged
         shipSegment.status = "damaged";
 
+        // Check if the ship is completely destroyed
+        const isSunk = ship.isDestroyed;
+
         return {
           hit: true,
           shipName: ship.name,
+          isSunk: isSunk,
         };
       }
     }
@@ -258,6 +275,7 @@ export default function GameScreen() {
     return {
       hit: false,
       shipName: null,
+      isSunk: false,
     };
   };
 

@@ -29,11 +29,21 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
     );
     const [showRightShips, setShowRightShips] = useState(false);
     const [rightFieldShots, setRightFieldShots] = useState<{
-      [key: string]: "hit" | "miss";
+      [key: string]: {
+        result: "hit" | "miss";
+        isSunk: boolean;
+        shipName?: string;
+      };
     }>({});
     const [leftFieldShots, setLeftFieldShots] = useState<{
-      [key: string]: "hit" | "miss";
+      [key: string]: {
+        result: "hit" | "miss";
+        isSunk: boolean;
+        shipName?: string;
+      };
     }>({});
+    const [sunkRightShips, setSunkRightShips] = useState<string[]>([]);
+    const [sunkLeftShips, setSunkLeftShips] = useState<string[]>([]);
 
     // Expose methods to parent component
     useImperativeHandle(ref, () => ({
@@ -42,25 +52,61 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
       recordShot: (
         coordinate: string,
         result: "hit" | "miss",
-        isPlayerShot: boolean
+        isPlayerShot: boolean,
+        isSunk: boolean = false,
+        shipName?: string
       ) => {
         // Record shots on the appropriate field
         if (isPlayerShot) {
           // Player shot at the right field
           setRightFieldShots((prev) => ({
             ...prev,
-            [coordinate]: result,
+            [coordinate]: {
+              result,
+              isSunk,
+              shipName: isSunk ? shipName : undefined,
+            },
           }));
+
+          // If a ship was sunk, add it to the list of sunk ships
+          if (isSunk && shipName && !sunkRightShips.includes(shipName)) {
+            setSunkRightShips((prev) => [...prev, shipName]);
+          }
         } else {
           // Bot shot at the left field
           setLeftFieldShots((prev) => ({
             ...prev,
-            [coordinate]: result,
+            [coordinate]: {
+              result,
+              isSunk,
+              shipName: isSunk ? shipName : undefined,
+            },
           }));
+
+          // If a ship was sunk, add it to the list of sunk ships
+          if (isSunk && shipName && !sunkLeftShips.includes(shipName)) {
+            setSunkLeftShips((prev) => [...prev, shipName]);
+          }
         }
       },
-      getRightFieldShots: () => rightFieldShots,
-      getLeftFieldShots: () => leftFieldShots,
+      getRightFieldShots: () => {
+        // Convert the complex shot info back to simple hit/miss for compatibility
+        const simpleShots: { [key: string]: "hit" | "miss" } = {};
+        Object.entries(rightFieldShots).forEach(([coord, info]) => {
+          simpleShots[coord] = info.result;
+        });
+        return simpleShots;
+      },
+      getLeftFieldShots: () => {
+        // Convert the complex shot info back to simple hit/miss for compatibility
+        const simpleShots: { [key: string]: "hit" | "miss" } = {};
+        Object.entries(leftFieldShots).forEach(([coord, info]) => {
+          simpleShots[coord] = info.result;
+        });
+        return simpleShots;
+      },
+      getSunkRightShips: () => sunkRightShips,
+      getSunkLeftShips: () => sunkLeftShips,
     }));
 
     // Generate a random coordinate (e.g., "A1", "B5")
@@ -176,6 +222,10 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
       setRightShipCoordinates(rightCoordinates);
       setGameStarted(true);
 
+      // Reset sunk ships
+      setSunkLeftShips([]);
+      setSunkRightShips([]);
+
       // Notify parent component that game has started
       if (onGameStart) {
         onGameStart();
@@ -206,21 +256,32 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
             isHead: index === 0,
             isTail: index === array.length - 1,
             isVertical: ship.isVertical,
+            isShipSunk: sunkRightShips.includes(ship.name),
           }))
         );
       } else {
         // Only show ships that have been hit
-        return rightPlayerShips.flatMap((ship) =>
-          ship.segments
-            .filter((segment) => segment.status === "damaged")
+        return rightPlayerShips.flatMap((ship) => {
+          const isShipSunk = sunkRightShips.includes(ship.name);
+
+          return ship.segments
+            .filter(
+              (segment) =>
+                // Show if segment is damaged or if ship is completely sunk
+                segment.status === "damaged" || isShipSunk
+            )
             .map((segment, _, array) => ({
               ...segment,
               shipName: ship.name,
-              isHead: false, // Don't show head/tail indicators for partially revealed ships
-              isTail: false,
+              // Only show head/tail when ship is fully sunk
+              isHead: isShipSunk ? ship.segments.indexOf(segment) === 0 : false,
+              isTail: isShipSunk
+                ? ship.segments.indexOf(segment) === ship.segments.length - 1
+                : false,
               isVertical: ship.isVertical,
-            }))
-        );
+              isShipSunk,
+            }));
+        });
       }
     };
 
@@ -236,15 +297,18 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
                   isHead: index === 0, // First segment is the head
                   isTail: index === array.length - 1, // Last segment is the tail
                   isVertical: ship.isVertical, // Pass the ship orientation
+                  isShipSunk: sunkLeftShips.includes(ship.name),
                 }))
               )}
               shots={leftFieldShots}
+              sunkShips={sunkLeftShips}
             />
           </View>
           <View style={styles.fieldContainer}>
             <Field
               shipSegments={getVisibleRightShipSegments()}
               shots={rightFieldShots}
+              sunkShips={sunkRightShips}
             />
           </View>
         </View>
