@@ -1,14 +1,18 @@
 import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 
+// Constants for grid size
+const NUM_ROWS = 10;
+const NUM_COLS = 11;
+
 export function Field() {
   // Create a 10x10 grid of squares with coordinates
   const renderSquares = () => {
     const rows = [];
-    for (let r = 0; r < 10; r++) {
+    for (let r = 0; r < NUM_ROWS; r++) {
       const cells = [];
-      for (let c = 0; c < 10; c++) {
-        if (r === 0 && c > 0) {
+      for (let c = 0; c < NUM_COLS; c++) {
+        if (r === NUM_ROWS - 1 && c > 0) {
           // Top row for numeric coordinates (1-10)
           cells.push(
             <View key={`${r}-${c}`} style={styles.square}>
@@ -49,10 +53,10 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    height: "10%",
+    height: `${100 / NUM_ROWS}%`,
   },
   square: {
-    width: "10%",
+    width: `${100 / NUM_COLS}%`,
     height: "100%",
     borderWidth: 0.5,
     borderColor: "#ddd",
