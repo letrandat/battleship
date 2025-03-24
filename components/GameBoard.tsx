@@ -133,7 +133,14 @@ export function GameBoard() {
     <View style={styles.gameBoard}>
       <View style={styles.boardContainer}>
         <View style={styles.fieldContainer}>
-          <Field />
+          <Field
+            shipSegments={playerShips.flatMap((ship) =>
+              ship.segments.map((segment) => ({
+                ...segment,
+                shipName: ship.name,
+              }))
+            )}
+          />
         </View>
         <View style={styles.fieldContainer}>
           <Field />
