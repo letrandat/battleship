@@ -9,8 +9,14 @@ import {
 import { Field } from "./Field";
 import { createShip, Ship, Coordinate } from "./Ship";
 
-// Ship sizes in the game
-const SHIP_SIZES = [5, 4, 3, 3, 2]; // Carrier, Battleship, Cruiser, Submarine, Destroyer
+// Ship sizes and names in the game
+const SHIPS = [
+  { size: 5, name: "Carrier" },
+  { size: 4, name: "Battleship" },
+  { size: 3, name: "Cruiser" },
+  { size: 3, name: "Submarine" },
+  { size: 2, name: "Destroyer" },
+];
 
 export function GameBoard() {
   const [gameStarted, setGameStarted] = useState(false);
@@ -98,14 +104,16 @@ export function GameBoard() {
   const placeShips = () => {
     const ships: Ship[] = [];
     const allCoordinates: string[] = [];
+    const shipDetails: { name: string; coordinates: string[] }[] = [];
 
     // Place each ship
-    for (const size of SHIP_SIZES) {
-      const coordinates = generateShipCoordinates(size, ships);
-      if (coordinates.length === size) {
-        const ship = createShip(coordinates);
-        ships.push(ship);
+    for (const ship of SHIPS) {
+      const coordinates = generateShipCoordinates(ship.size, ships);
+      if (coordinates.length === ship.size) {
+        const newShip = createShip(coordinates, ship.name);
+        ships.push(newShip);
         allCoordinates.push(...coordinates);
+        shipDetails.push({ name: ship.name, coordinates: [...coordinates] });
       }
     }
 
@@ -113,8 +121,12 @@ export function GameBoard() {
     setShipCoordinates(allCoordinates);
     setGameStarted(true);
 
-    // Log ship locations to console instead of displaying on screen
-    console.log("Ships placed at:", allCoordinates.join(", "));
+    // Log ship information using the toString method
+    console.log("Ships placed:");
+    ships.forEach((ship) => {
+      console.log(ship.toString());
+      console.log("-".repeat(30)); // Separator for better readability
+    });
   };
 
   return (

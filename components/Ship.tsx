@@ -9,6 +9,7 @@ export type ShipSegment = {
 };
 
 export type Ship = {
+  name: string; // Ship name (e.g., "Carrier", "Battleship")
   segments: ShipSegment[]; // Array of segments in order from head to tail
 
   // Helper properties (can be computed)
@@ -17,16 +18,18 @@ export type Ship = {
   get tail(): ShipSegment;
   get body(): ShipSegment[];
   get isDestroyed(): boolean;
+  toString(): string; // Method to return a string representation of the ship
 };
 
 // Ship factory function
-export function createShip(coordinates: Coordinate[]): Ship {
+export function createShip(coordinates: Coordinate[], name: string): Ship {
   const segments: ShipSegment[] = coordinates.map((coordinate) => ({
     coordinate,
     status: "healthy",
   }));
 
   return {
+    name,
     segments,
 
     get isVertical() {
@@ -51,6 +54,33 @@ export function createShip(coordinates: Coordinate[]): Ship {
 
     get isDestroyed() {
       return this.segments.every((segment) => segment.status === "damaged");
+    },
+
+    toString() {
+      const size = this.segments.length;
+      const orientation = this.isVertical ? "vertical" : "horizontal";
+      const headStatus = `${this.head.coordinate} (${this.head.status})`;
+      const tailStatus = `${this.tail.coordinate} (${this.tail.status})`;
+
+      let bodyStatus = "";
+      if (this.body.length > 0) {
+        bodyStatus = this.body
+          .map((segment) => `${segment.coordinate} (${segment.status})`)
+          .join(", ");
+      }
+
+      let info = `Ship: ${this.name}\n`;
+      info += `Size: ${size}, Orientation: ${orientation}\n`;
+      info += `Head: ${headStatus}\n`;
+
+      if (this.body.length > 0) {
+        info += `Body: ${bodyStatus}\n`;
+      }
+
+      info += `Tail: ${tailStatus}\n`;
+      info += `Status: ${this.isDestroyed ? "Destroyed" : "Active"}`;
+
+      return info;
     },
   };
 }
