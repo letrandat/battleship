@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Dimensions,
-  TouchableOpacity,
-  Text,
-} from "react-native";
+import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
 import { Field } from "./Field";
 import { createShip, Ship, Coordinate } from "./Ship";
 
@@ -259,9 +253,9 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     position: "absolute",
-    top: 20,
-    right: 20,
-    backgroundColor: "#f44336",
+    top: 0,
+    right: 10,
+    backgroundColor: "rgba(244, 67, 54, 0.8)",
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
