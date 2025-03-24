@@ -1,5 +1,15 @@
 // Ship data structure definitions
 
+// Ship color mapping
+export const SHIP_COLORS = {
+  Carrier: "rgba(70, 130, 180, 0.3)", // Steel Blue
+  Battleship: "rgba(60, 179, 113, 0.3)", // Medium Sea Green
+  Cruiser: "rgba(147, 112, 219, 0.3)", // Medium Purple
+  Submarine: "rgba(255, 165, 0, 0.3)", // Orange
+  Destroyer: "rgba(255, 99, 71, 0.3)", // Tomato
+  default: "rgba(100, 149, 237, 0.3)", // Default Light Blue
+};
+
 export type Coordinate = string; // e.g., "A1", "B4"
 export type SegmentStatus = "healthy" | "damaged";
 

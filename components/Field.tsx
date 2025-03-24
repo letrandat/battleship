@@ -1,21 +1,11 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { ShipSegment } from "./Ship";
+import { ShipSegment, SHIP_COLORS } from "./Ship";
 import { Cell } from "./Cell";
 
 // Constants for grid size
 const NUM_ROWS = 11;
 const NUM_COLS = 11;
-
-// Ship color mapping
-const SHIP_COLORS = {
-  Carrier: "rgba(70, 130, 180, 0.3)", // Steel Blue
-  Battleship: "rgba(60, 179, 113, 0.3)", // Medium Sea Green
-  Cruiser: "rgba(147, 112, 219, 0.3)", // Medium Purple
-  Submarine: "rgba(255, 165, 0, 0.3)", // Orange
-  Destroyer: "rgba(255, 99, 71, 0.3)", // Tomato
-  default: "rgba(100, 149, 237, 0.3)", // Default Light Blue
-};
 
 type ShotInfo = {
   result: "hit" | "miss";
