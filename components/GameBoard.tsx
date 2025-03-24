@@ -1,16 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
 import { Field } from "./Field";
-import { createShip, Ship, Coordinate } from "./Ship";
-
-// Ship sizes and names in the game
-const SHIPS = [
-  { size: 5, name: "Carrier" },
-  { size: 4, name: "Battleship" },
-  { size: 3, name: "Cruiser" },
-  { size: 3, name: "Submarine" },
-  { size: 2, name: "Destroyer" },
-];
+import { createShip, Ship, Coordinate, SHIPS } from "./Ship";
 
 type GameBoardProps = {
   onGameStart?: () => void;

@@ -10,6 +10,15 @@ export const SHIP_COLORS = {
   default: "rgba(100, 149, 237, 0.3)", // Default Light Blue
 };
 
+// Ship sizes and names in the game
+export const SHIPS = [
+  { size: 5, name: "Carrier" },
+  { size: 4, name: "Battleship" },
+  { size: 3, name: "Cruiser" },
+  { size: 3, name: "Submarine" },
+  { size: 2, name: "Destroyer" },
+];
+
 export type Coordinate = string; // e.g., "A1", "B4"
 export type SegmentStatus = "healthy" | "damaged";
 
