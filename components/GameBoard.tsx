@@ -135,9 +135,12 @@ export function GameBoard() {
         <View style={styles.fieldContainer}>
           <Field
             shipSegments={playerShips.flatMap((ship) =>
-              ship.segments.map((segment) => ({
+              ship.segments.map((segment, index, array) => ({
                 ...segment,
                 shipName: ship.name,
+                isHead: index === 0, // First segment is the head
+                isTail: index === array.length - 1, // Last segment is the tail
+                isVertical: ship.isVertical, // Pass the ship orientation
               }))
             )}
           />

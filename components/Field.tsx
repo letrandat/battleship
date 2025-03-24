@@ -17,7 +17,12 @@ const SHIP_COLORS = {
 };
 
 type FieldProps = {
-  shipSegments?: (ShipSegment & { shipName?: string })[];
+  shipSegments?: (ShipSegment & {
+    shipName?: string;
+    isHead?: boolean;
+    isTail?: boolean;
+    isVertical?: boolean;
+  })[];
 };
 
 export function Field({ shipSegments = [] }: FieldProps) {
@@ -25,7 +30,14 @@ export function Field({ shipSegments = [] }: FieldProps) {
   const findSegmentAt = (
     row: number,
     col: number
-  ): (ShipSegment & { shipName?: string }) | undefined => {
+  ):
+    | (ShipSegment & {
+        shipName?: string;
+        isHead?: boolean;
+        isTail?: boolean;
+        isVertical?: boolean;
+      })
+    | undefined => {
     if (row >= NUM_ROWS - 1 || col === 0) return undefined; // Skip labels
 
     const letter = String.fromCharCode(65 + row); // Convert 0-9 to A-J
@@ -68,6 +80,7 @@ export function Field({ shipSegments = [] }: FieldProps) {
           const segment = findSegmentAt(r, c);
 
           let squareStyle: ViewStyle = { ...styles.square };
+          let content = null;
 
           if (segment) {
             if (segment.status === "damaged") {
@@ -76,9 +89,24 @@ export function Field({ shipSegments = [] }: FieldProps) {
               // Apply custom color based on ship name
               squareStyle.backgroundColor = getShipColor(segment.shipName);
             }
+
+            // Add indicators for head and tail
+            if (segment.isHead) {
+              if (segment.isVertical) {
+                content = <View style={styles.verticalHeadIndicator} />;
+              } else {
+                content = <View style={styles.horizontalHeadIndicator} />;
+              }
+            } else if (segment.isTail) {
+              content = <View style={styles.tailIndicator} />;
+            }
           }
 
-          cells.push(<View key={`${r}-${c}`} style={squareStyle} />);
+          cells.push(
+            <View key={`${r}-${c}`} style={squareStyle}>
+              {content}
+            </View>
+          );
         }
       }
       rows.push(
@@ -116,7 +144,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  damagedSegment: {
-    backgroundColor: "rgba(255, 0, 0, 0.7)", // Red with some transparency
+  verticalHeadIndicator: {
+    width: 24,
+    height: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    transform: [{ rotate: "45deg" }],
+    marginTop: -6, // Shift up slightly to indicate upward direction
+  },
+  horizontalHeadIndicator: {
+    width: 24,
+    height: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    transform: [{ rotate: "45deg" }],
+    marginLeft: -6, // Shift left slightly to indicate leftward direction
+  },
+  tailIndicator: {
+    width: "60%",
+    height: "60%",
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    borderRadius: 3,
   },
 });
