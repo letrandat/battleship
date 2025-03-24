@@ -54,6 +54,31 @@ export function Field({ shipSegments = [] }: FieldProps) {
     );
   };
 
+  // Render a 5-point star
+  const renderStar = () => {
+    return (
+      <View style={styles.starContainer}>
+        <View style={styles.star}>
+          <View
+            style={[styles.starPoint, { transform: [{ rotate: "0deg" }] }]}
+          />
+          <View
+            style={[styles.starPoint, { transform: [{ rotate: "72deg" }] }]}
+          />
+          <View
+            style={[styles.starPoint, { transform: [{ rotate: "144deg" }] }]}
+          />
+          <View
+            style={[styles.starPoint, { transform: [{ rotate: "216deg" }] }]}
+          />
+          <View
+            style={[styles.starPoint, { transform: [{ rotate: "288deg" }] }]}
+          />
+        </View>
+      </View>
+    );
+  };
+
   // Create a 10x10 grid of squares with coordinates
   const renderSquares = () => {
     const rows = [];
@@ -85,20 +110,21 @@ export function Field({ shipSegments = [] }: FieldProps) {
           if (segment) {
             if (segment.status === "damaged") {
               squareStyle.backgroundColor = "rgba(255, 0, 0, 0.7)"; // Red for damaged
+              content = renderStar(); // Add star for damaged segments
             } else {
               // Apply custom color based on ship name
               squareStyle.backgroundColor = getShipColor(segment.shipName);
-            }
 
-            // Add indicators for head and tail
-            if (segment.isHead) {
-              if (segment.isVertical) {
-                content = <View style={styles.verticalHeadIndicator} />;
-              } else {
-                content = <View style={styles.horizontalHeadIndicator} />;
+              // Add indicators for head and tail
+              if (segment.isHead) {
+                if (segment.isVertical) {
+                  content = <View style={styles.verticalHeadIndicator} />;
+                } else {
+                  content = <View style={styles.horizontalHeadIndicator} />;
+                }
+              } else if (segment.isTail) {
+                content = <View style={styles.tailIndicator} />;
               }
-            } else if (segment.isTail) {
-              content = <View style={styles.tailIndicator} />;
             }
           }
 
@@ -163,5 +189,29 @@ const styles = StyleSheet.create({
     height: "60%",
     backgroundColor: "rgba(0, 0, 0, 0.3)",
     borderRadius: 3,
+  },
+  starContainer: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  star: {
+    width: 22,
+    height: 22,
+    position: "relative",
+  },
+  starPoint: {
+    position: "absolute",
+    width: 0,
+    height: 0,
+    borderLeftWidth: 11,
+    borderRightWidth: 11,
+    borderBottomWidth: 22,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: "yellow",
+    left: 0,
+    top: 0,
   },
 });
