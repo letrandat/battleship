@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Dimensions } from "react-native";
 import { Field } from "./Field";
 
 export function GameBoard() {
@@ -21,11 +21,12 @@ export function GameBoard() {
 const styles = StyleSheet.create({
   gameBoard: {
     width: "100%",
-    aspectRatio: 1,
+    aspectRatio: 1, // Back to square aspect ratio
     marginTop: 20,
     backgroundColor: "#f0f0f0",
     borderRadius: 8,
     position: "relative",
+    overflow: "hidden",
   },
   boardContainer: {
     width: "100%",
@@ -33,8 +34,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   fieldContainer: {
-    flex: 1,
-    padding: 10,
+    width: "50%",
+    height: "50%",
+    padding: 3, // Minimum padding to maximize grid space
   },
   dividerLine: {
     position: "absolute",

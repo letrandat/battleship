@@ -4,13 +4,19 @@ import { StyleSheet, View } from "react-native";
 export function Field() {
   // Create a 10x10 grid of squares
   const renderSquares = () => {
-    const squares = [];
+    const rows = [];
     for (let i = 0; i < 10; i++) {
+      const cells = [];
       for (let j = 0; j < 10; j++) {
-        squares.push(<View key={`${i}-${j}`} style={styles.square} />);
+        cells.push(<View key={`${i}-${j}`} style={styles.square} />);
       }
+      rows.push(
+        <View key={`row-${i}`} style={styles.row}>
+          {cells}
+        </View>
+      );
     }
-    return squares;
+    return rows;
   };
 
   return <View style={styles.field}>{renderSquares()}</View>;
@@ -18,16 +24,18 @@ export function Field() {
 
 const styles = StyleSheet.create({
   field: {
-    flex: 1,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#f8f8f8",
+    borderRadius: 2,
+  },
+  row: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 4,
+    height: "10%",
   },
   square: {
     width: "10%",
-    height: "10%",
+    height: "100%",
     borderWidth: 0.5,
     borderColor: "#ddd",
   },
