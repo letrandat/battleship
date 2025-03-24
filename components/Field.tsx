@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   coordinateText: {
-    fontSize: 10,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });
