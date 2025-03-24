@@ -5,34 +5,31 @@ export function Field() {
   // Create a 10x10 grid of squares with coordinates
   const renderSquares = () => {
     const rows = [];
-    for (let i = 0; i < 11; i++) {
+    for (let r = 0; r < 10; r++) {
       const cells = [];
-      for (let j = 0; j < 11; j++) {
-        if (i === 0 && j === 0) {
-          // Top-left corner is empty
-          cells.push(<View key={`${i}-${j}`} style={styles.square} />);
-        } else if (i === 0) {
+      for (let c = 0; c < 10; c++) {
+        if (r === 0 && c > 0) {
           // Top row for numeric coordinates (1-10)
           cells.push(
-            <View key={`${i}-${j}`} style={styles.square}>
-              <Text style={styles.coordinateText}>{j}</Text>
+            <View key={`${r}-${c}`} style={styles.square}>
+              <Text style={styles.coordinateText}>{c}</Text>
             </View>
           );
-        } else if (j === 0) {
+        } else if (c === 0) {
           // First column for letter coordinates (A-J)
-          const letter = String.fromCharCode(64 + i); // 'A' starts at 65 in ASCII
+          const letter = String.fromCharCode(65 + r); // 'A' starts at 65 in ASCII
           cells.push(
-            <View key={`${i}-${j}`} style={styles.square}>
+            <View key={`${r}-${c}`} style={styles.square}>
               <Text style={styles.coordinateText}>{letter}</Text>
             </View>
           );
         } else {
           // Regular grid cells
-          cells.push(<View key={`${i}-${j}`} style={styles.square} />);
+          cells.push(<View key={`${r}-${c}`} style={styles.square} />);
         }
       }
       rows.push(
-        <View key={`row-${i}`} style={styles.row}>
+        <View key={`row-${r}`} style={styles.row}>
           {cells}
         </View>
       );
