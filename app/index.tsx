@@ -162,7 +162,7 @@ export default function GameScreen() {
   };
 
   // Function to handle shots from cell clicks
-  const handleCellShot = (coordinate: string) => {
+  const handleCellShot = (coordinate: string, isHit: boolean) => {
     if (!gameStarted || !isHumanTurn) {
       return;
     }
@@ -198,6 +198,9 @@ export default function GameScreen() {
           shipName: result.shipName,
           isSunk: result.isSunk,
         });
+
+        // Player gets to go again after a hit
+        return;
       }
 
       // Human's turn is done, switch to bot's turn
@@ -205,31 +208,59 @@ export default function GameScreen() {
 
       // Simulate bot's turn after a delay
       setTimeout(() => {
-        // Bot makes a random shot
-        const botShot = generateBotShot();
-        if (botShot) {
-          const playerShips = gameBoardRef.current.getLeftPlayerShips();
-          const botShotResult = checkBotShot(botShot, playerShips);
-
-          // Record bot's shot
-          gameBoardRef.current.recordShot(
-            botShot,
-            botShotResult.hit ? "hit" : "miss",
-            false, // false means it's the bot's shot
-            botShotResult.isSunk,
-            botShotResult.shipName
-          );
-
-          console.log(
-            `Bot fired at ${botShot}: ${botShotResult.hit ? "HIT" : "MISS"}${
-              botShotResult.isSunk ? " and SUNK!" : ""
-            }`
-          );
-        }
-
-        setIsHumanTurn(true); // Switch back to human turn
+        handleBotTurn();
       }, 2000);
     }
+  };
+
+  // Function to handle bot's turn
+  const handleBotTurn = () => {
+    if (!gameBoardRef.current) return;
+
+    let botContinuesTurn = true;
+
+    while (botContinuesTurn) {
+      // Bot makes a random shot
+      const botShot = generateBotShot();
+      if (botShot) {
+        const playerShips = gameBoardRef.current.getLeftPlayerShips();
+        const botShotResult = checkBotShot(botShot, playerShips);
+
+        // Record bot's shot
+        gameBoardRef.current.recordShot(
+          botShot,
+          botShotResult.hit ? "hit" : "miss",
+          false, // false means it's the bot's shot
+          botShotResult.isSunk,
+          botShotResult.shipName
+        );
+
+        console.log(
+          `Bot fired at ${botShot}: ${botShotResult.hit ? "HIT" : "MISS"}${
+            botShotResult.isSunk ? " and SUNK!" : ""
+          }`
+        );
+
+        // Bot continues turn if it was a hit
+        botContinuesTurn = botShotResult.hit;
+
+        // Add a small delay between bot's multiple shots
+        if (botContinuesTurn) {
+          // We'll break the loop and use setTimeout to continue the bot's turn
+          // This creates a visible delay between multiple bot shots
+          botContinuesTurn = false;
+          setTimeout(() => {
+            handleBotTurn();
+          }, 1500);
+          return;
+        }
+      } else {
+        botContinuesTurn = false;
+      }
+    }
+
+    // Bot's turn is over, switch back to human
+    setIsHumanTurn(true);
   };
 
   const handleGameStart = () => {

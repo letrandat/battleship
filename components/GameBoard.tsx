@@ -7,7 +7,7 @@ import { generatePlayerShips } from "../utils/shipUtils";
 type GameBoardProps = {
   onGameStart?: () => void;
   isHumanTurn?: boolean;
-  onCellShot?: (coordinate: string) => void;
+  onCellShot?: (coordinate: string, isHit: boolean) => void;
 };
 
 export const GameBoard = forwardRef<any, GameBoardProps>(
@@ -195,9 +195,12 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
       // Check if this coordinate was already shot at
       if (rightFieldShots[coordinate]) return;
 
-      // Call the parent component's handler
+      // Check if the shot is a hit
+      const isHit = rightShipCoordinates.includes(coordinate);
+
+      // Call the parent component's handler with hit information
       if (onCellShot) {
-        onCellShot(coordinate);
+        onCellShot(coordinate, isHit);
       }
     };
 
