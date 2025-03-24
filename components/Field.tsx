@@ -13,7 +13,7 @@ export function Field() {
       const cells = [];
       for (let c = 0; c < NUM_COLS; c++) {
         if (r === NUM_ROWS - 1 && c > 0) {
-          // Top row for numeric coordinates (1-10)
+          // Bottom row for numeric coordinates (1-10)
           cells.push(
             <View key={`${r}-${c}`} style={styles.square}>
               <Text style={styles.coordinateText}>{c}</Text>
