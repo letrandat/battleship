@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   Button,
   Modal,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -18,7 +19,53 @@ export default function GameScreen() {
   const [modalMessage, setModalMessage] = useState("");
   const [isHumanTurn, setIsHumanTurn] = useState(true); // Human starts first
   const [gameStarted, setGameStarted] = useState(false);
+  const [hitNotification, setHitNotification] = useState<{
+    visible: boolean;
+    message: string;
+    shipName: string | null;
+  }>({ visible: false, message: "", shipName: null });
+
+  // Animation values
+  const notificationOpacity = useRef(new Animated.Value(0)).current;
+  const notificationScale = useRef(new Animated.Value(0.5)).current;
+
   const gameBoardRef = useRef<any>(null);
+
+  // Handle hit notification animation
+  useEffect(() => {
+    if (hitNotification.visible) {
+      // Reset animation values
+      notificationOpacity.setValue(0);
+      notificationScale.setValue(0.5);
+
+      // Animate in
+      Animated.parallel([
+        Animated.timing(notificationOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(notificationScale, {
+          toValue: 1,
+          friction: 4,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Auto-hide after delay
+      const timer = setTimeout(() => {
+        Animated.timing(notificationOpacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start(() => {
+          setHitNotification((prev) => ({ ...prev, visible: false }));
+        });
+      }, 2500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hitNotification.visible]);
 
   const isValidCoordinate = (coord: string) => {
     // Check format like A1, B7, etc. (A-J and 1-10)
@@ -103,9 +150,21 @@ export default function GameScreen() {
           true // true means it's the player's shot
         );
 
+        // Show hit notification if it's a hit
+        if (result.hit) {
+          setHitNotification({
+            visible: true,
+            message: result.message,
+            shipName: result.shipName,
+          });
+        }
+
         // Display result message
         setModalMessage(result.message);
         setModalVisible(true);
+
+        // Clear the coordinate input
+        setCoordinate("");
 
         // Human's turn is done, switch to bot's turn
         setIsHumanTurn(false);
@@ -237,6 +296,23 @@ export default function GameScreen() {
 
       <GameBoard ref={gameBoardRef} onGameStart={handleGameStart} />
 
+      {/* Hit Notification */}
+      {hitNotification.visible && (
+        <Animated.View
+          style={[
+            styles.hitNotification,
+            {
+              opacity: notificationOpacity,
+              transform: [{ scale: notificationScale }],
+            },
+          ]}
+        >
+          <ThemedText style={styles.hitNotificationText}>
+            {hitNotification.message}
+          </ThemedText>
+        </Animated.View>
+      )}
+
       {/* Custom Modal */}
       <Modal
         animationType="fade"
@@ -343,5 +419,32 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
+  },
+  hitNotification: {
+    position: "absolute",
+    top: "40%",
+    alignSelf: "center",
+    backgroundColor: "rgba(255, 0, 0, 0.8)",
+    padding: 15,
+    borderRadius: 10,
+    minWidth: "70%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  hitNotificationText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 22,
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 });

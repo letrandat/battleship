@@ -195,6 +195,35 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
       });
     };
 
+    // Get hit ships to always display, even when showRightShips is false
+    const getVisibleRightShipSegments = () => {
+      if (showRightShips) {
+        // Show all ships
+        return rightPlayerShips.flatMap((ship) =>
+          ship.segments.map((segment, index, array) => ({
+            ...segment,
+            shipName: ship.name,
+            isHead: index === 0,
+            isTail: index === array.length - 1,
+            isVertical: ship.isVertical,
+          }))
+        );
+      } else {
+        // Only show ships that have been hit
+        return rightPlayerShips.flatMap((ship) =>
+          ship.segments
+            .filter((segment) => segment.status === "damaged")
+            .map((segment, _, array) => ({
+              ...segment,
+              shipName: ship.name,
+              isHead: false, // Don't show head/tail indicators for partially revealed ships
+              isTail: false,
+              isVertical: ship.isVertical,
+            }))
+        );
+      }
+    };
+
     return (
       <View style={styles.gameBoard}>
         <View style={styles.boardContainer}>
@@ -214,19 +243,7 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
           </View>
           <View style={styles.fieldContainer}>
             <Field
-              shipSegments={
-                showRightShips
-                  ? rightPlayerShips.flatMap((ship) =>
-                      ship.segments.map((segment, index, array) => ({
-                        ...segment,
-                        shipName: ship.name,
-                        isHead: index === 0,
-                        isTail: index === array.length - 1,
-                        isVertical: ship.isVertical,
-                      }))
-                    )
-                  : []
-              }
+              shipSegments={getVisibleRightShipSegments()}
               shots={rightFieldShots}
             />
           </View>

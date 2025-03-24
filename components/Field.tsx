@@ -90,6 +90,20 @@ export function Field({ shipSegments = [], shots = {} }: FieldProps) {
     );
   };
 
+  // Render an enhanced hit marker with explosion effect
+  const renderHitMarker = (shipName?: string) => {
+    return (
+      <View style={styles.hitContainer}>
+        {renderStar()}
+        <View style={styles.explosionOuter} />
+        <View style={styles.explosionInner} />
+        {shipName && (
+          <Text style={styles.hitShipName}>{shipName.charAt(0)}</Text>
+        )}
+      </View>
+    );
+  };
+
   // Render a miss marker (circle with X)
   const renderMissMarker = () => {
     return (
@@ -133,8 +147,8 @@ export function Field({ shipSegments = [], shots = {} }: FieldProps) {
 
           if (segment) {
             if (segment.status === "damaged" || shotStatus === "hit") {
-              squareStyle.backgroundColor = "rgba(255, 0, 0, 0.7)"; // Red for damaged
-              content = renderStar(); // Add star for damaged segments
+              squareStyle.backgroundColor = "rgba(255, 0, 0, 0.9)"; // Brighter red for damaged
+              content = renderHitMarker(segment.shipName); // Enhanced hit marker with ship info
             } else {
               // Apply custom color based on ship name
               squareStyle.backgroundColor = getShipColor(segment.shipName);
@@ -222,6 +236,7 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    position: "absolute",
   },
   star: {
     width: 22,
@@ -240,6 +255,35 @@ const styles = StyleSheet.create({
     borderBottomColor: "yellow",
     left: 0,
     top: 0,
+  },
+  hitContainer: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  explosionOuter: {
+    position: "absolute",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 100, 0, 0.6)",
+  },
+  explosionInner: {
+    position: "absolute",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 220, 0, 0.8)",
+  },
+  hitShipName: {
+    position: "absolute",
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+    textShadowColor: "rgba(0, 0, 0, 0.8)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
   missContainer: {
     width: "100%",
