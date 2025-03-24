@@ -1,20 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  StyleSheet,
-  View,
-  Modal,
-  TouchableOpacity,
-  Animated,
-} from "react-native";
+import { StyleSheet, View, Animated } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { GameBoard } from "@/components/GameBoard";
 import { Ship } from "@/components/Ship";
 
 export default function GameScreen() {
-  const [coordinate, setCoordinate] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
   const [isHumanTurn, setIsHumanTurn] = useState(true); // Human starts first
   const [gameStarted, setGameStarted] = useState(false);
   const [hitNotification, setHitNotification] = useState<{
@@ -66,12 +57,6 @@ export default function GameScreen() {
     }
   }, [hitNotification.visible]);
 
-  const isValidCoordinate = (coord: string) => {
-    // Check format like A1, B7, etc. (A-J and 1-10)
-    const pattern = /^[A-Ja-j]([1-9]|10)$/;
-    return pattern.test(coord);
-  };
-
   const checkForHit = (coord: string, botShips: Ship[]) => {
     // Normalize coordinate to uppercase
     const normalizedCoord = coord.toUpperCase();
@@ -112,107 +97,6 @@ export default function GameScreen() {
       shipName: null,
       isSunk: false,
     };
-  };
-
-  const handleSubmit = () => {
-    if (!gameStarted) {
-      setModalMessage("Please start the game first.");
-      setModalVisible(true);
-      return;
-    }
-
-    if (!isHumanTurn) {
-      setModalMessage("It's not your turn! Please wait for the bot to play.");
-      setModalVisible(true);
-      return;
-    }
-
-    if (isValidCoordinate(coordinate)) {
-      const normalizedCoord = coordinate.toUpperCase();
-
-      // Check if this coordinate was already shot at
-      if (
-        gameBoardRef.current &&
-        gameBoardRef.current.getRightFieldShots()[normalizedCoord]
-      ) {
-        setModalMessage(
-          `You already fired at ${normalizedCoord}. Try a different coordinate.`
-        );
-        setModalVisible(true);
-        return;
-      }
-
-      if (gameBoardRef.current) {
-        const botShips = gameBoardRef.current.getRightPlayerShips();
-
-        const result = checkForHit(normalizedCoord, botShips);
-
-        // Record the shot in the game board
-        gameBoardRef.current.recordShot(
-          normalizedCoord,
-          result.hit ? "hit" : "miss",
-          true, // true means it's the player's shot
-          result.isSunk, // pass whether the ship is sunk
-          result.shipName // pass the ship name (only used if isSunk is true)
-        );
-
-        // Show hit notification if it's a hit
-        if (result.hit) {
-          setHitNotification({
-            visible: true,
-            message: result.message,
-            shipName: result.shipName,
-            isSunk: result.isSunk,
-          });
-        }
-
-        // Display result message
-        setModalMessage(result.message);
-        setModalVisible(true);
-
-        // Clear the coordinate input
-        setCoordinate("");
-
-        // Human's turn is done, switch to bot's turn
-        setIsHumanTurn(false);
-
-        // Simulate bot's turn after a delay
-        setTimeout(() => {
-          // Bot makes a random shot
-          const botShot = generateBotShot();
-          if (botShot) {
-            const playerShips = gameBoardRef.current.getLeftPlayerShips();
-            const botShotResult = checkBotShot(botShot, playerShips);
-
-            // Record bot's shot
-            gameBoardRef.current.recordShot(
-              botShot,
-              botShotResult.hit ? "hit" : "miss",
-              false, // false means it's the bot's shot
-              botShotResult.isSunk,
-              botShotResult.shipName
-            );
-
-            console.log(
-              `Bot fired at ${botShot}: ${botShotResult.hit ? "HIT" : "MISS"}${
-                botShotResult.isSunk ? " and SUNK!" : ""
-              }`
-            );
-          }
-
-          setIsHumanTurn(true); // Switch back to human turn
-        }, 2000);
-      } else {
-        setModalMessage("Game not initialized yet. Please wait.");
-        setModalVisible(true);
-      }
-    } else {
-      setModalMessage(
-        "Please enter a valid coordinate like A1, B7, etc. (A-J and 1-10)"
-      );
-      setModalVisible(true);
-      console.error("Invalid coordinate:", coordinate);
-    }
   };
 
   // Generate a random coordinate for the bot's shot
@@ -279,16 +163,7 @@ export default function GameScreen() {
 
   // Function to handle shots from cell clicks
   const handleCellShot = (coordinate: string) => {
-    // The same logic as handleSubmit but with the coordinate passed from the cell
-    if (!gameStarted) {
-      setModalMessage("Please start the game first.");
-      setModalVisible(true);
-      return;
-    }
-
-    if (!isHumanTurn) {
-      setModalMessage("It's not your turn! Please wait for the bot to play.");
-      setModalVisible(true);
+    if (!gameStarted || !isHumanTurn) {
       return;
     }
 
@@ -299,16 +174,11 @@ export default function GameScreen() {
       gameBoardRef.current &&
       gameBoardRef.current.getRightFieldShots()[normalizedCoord]
     ) {
-      setModalMessage(
-        `You already fired at ${normalizedCoord}. Try a different coordinate.`
-      );
-      setModalVisible(true);
       return;
     }
 
     if (gameBoardRef.current) {
       const botShips = gameBoardRef.current.getRightPlayerShips();
-
       const result = checkForHit(normalizedCoord, botShips);
 
       // Record the shot in the game board
@@ -329,13 +199,6 @@ export default function GameScreen() {
           isSunk: result.isSunk,
         });
       }
-
-      // Display result message
-      setModalMessage(result.message);
-      setModalVisible(true);
-
-      // Clear the coordinate input
-      setCoordinate("");
 
       // Human's turn is done, switch to bot's turn
       setIsHumanTurn(false);
@@ -366,9 +229,6 @@ export default function GameScreen() {
 
         setIsHumanTurn(true); // Switch back to human turn
       }, 2000);
-    } else {
-      setModalMessage("Game not initialized yet. Please wait.");
-      setModalVisible(true);
     }
   };
 
@@ -412,28 +272,6 @@ export default function GameScreen() {
           </ThemedText>
         </Animated.View>
       )}
-
-      {/* Custom Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <ThemedText style={styles.modalText}>Game Message</ThemedText>
-            <ThemedText style={styles.modalMessage}>{modalMessage}</ThemedText>
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setModalVisible(false)}
-            >
-              <ThemedText style={styles.buttonText}>OK</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </ThemedView>
   );
 }
@@ -461,50 +299,6 @@ const styles = StyleSheet.create({
   },
   inactiveStatus: {
     color: "red",
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 25,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    width: "80%",
-  },
-  modalText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  modalMessage: {
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  button: {
-    backgroundColor: "#2196F3",
-    borderRadius: 5,
-    padding: 10,
-    paddingHorizontal: 20,
-    elevation: 2,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
   },
   hitNotification: {
     position: "absolute",
