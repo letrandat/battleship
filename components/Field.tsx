@@ -23,12 +23,20 @@ type FieldProps = {
   })[];
   shots?: { [key: string]: ShotInfo };
   sunkShips?: string[];
+  onCellShot?: (coordinate: string) => void;
+  isHumanTurn?: boolean;
+  gameStarted?: boolean;
+  isRightField?: boolean;
 };
 
 export function Field({
   shipSegments = [],
   shots = {},
   sunkShips = [],
+  onCellShot,
+  isHumanTurn = false,
+  gameStarted = false,
+  isRightField = false,
 }: FieldProps) {
   // Helper to find segment at specific coordinate
   const findSegmentAt = (
@@ -92,6 +100,10 @@ export function Field({
               shotInfo={shotInfo}
               isCoordinateLabel={isCoordinateLabel}
               sunkShips={sunkShips}
+              onCellShot={onCellShot}
+              isHumanTurn={isHumanTurn}
+              gameStarted={gameStarted}
+              isRightField={isRightField}
             />
           </View>
         );

@@ -27,6 +27,10 @@ type CellProps = {
   shotInfo?: ShotInfo | null;
   isCoordinateLabel?: boolean;
   sunkShips?: string[];
+  onCellShot?: (coordinate: string) => void;
+  isHumanTurn?: boolean;
+  gameStarted?: boolean;
+  isRightField?: boolean;
 };
 
 export function Cell({
@@ -36,6 +40,10 @@ export function Cell({
   shotInfo,
   isCoordinateLabel,
   sunkShips = [],
+  onCellShot,
+  isHumanTurn = false,
+  gameStarted = false,
+  isRightField = false,
 }: CellProps) {
   // Get color for ship segment based on ship name
   const getShipColor = (shipName?: string): string => {
@@ -52,6 +60,11 @@ export function Cell({
     const letter = String.fromCharCode(65 + row); // Convert 0-9 to A-J
     const coordinate = `${letter}${col}`;
     console.log(`Cell clicked: ${coordinate}`);
+
+    // Only allow shots on right field (opponent's field), during human's turn, and when game is started
+    if (isRightField && isHumanTurn && gameStarted && onCellShot && !shotInfo) {
+      onCellShot(coordinate);
+    }
   };
 
   // Render a 5-point star

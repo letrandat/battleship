@@ -6,10 +6,12 @@ import { generatePlayerShips } from "../utils/shipUtils";
 
 type GameBoardProps = {
   onGameStart?: () => void;
+  isHumanTurn?: boolean;
+  onCellShot?: (coordinate: string) => void;
 };
 
 export const GameBoard = forwardRef<any, GameBoardProps>(
-  ({ onGameStart }, ref) => {
+  ({ onGameStart, isHumanTurn = true, onCellShot }, ref) => {
     const [gameStarted, setGameStarted] = useState(false);
     const [leftPlayerShips, setLeftPlayerShips] = useState<Ship[]>([]);
     const [rightPlayerShips, setRightPlayerShips] = useState<Ship[]>([]);
@@ -185,6 +187,20 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
       }
     };
 
+    // Function to handle cell shots on the right field (opponent's field)
+    const handleRightFieldShot = (coordinate: string) => {
+      // Only allow shots if it's the player's turn and the game has started
+      if (!isHumanTurn || !gameStarted) return;
+
+      // Check if this coordinate was already shot at
+      if (rightFieldShots[coordinate]) return;
+
+      // Call the parent component's handler
+      if (onCellShot) {
+        onCellShot(coordinate);
+      }
+    };
+
     return (
       <View style={styles.gameBoard}>
         <View style={styles.boardContainer}>
@@ -202,6 +218,9 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
               )}
               shots={leftFieldShots}
               sunkShips={sunkLeftShips}
+              isHumanTurn={isHumanTurn}
+              gameStarted={gameStarted}
+              isRightField={false}
             />
           </View>
           <View style={styles.fieldContainer}>
@@ -209,6 +228,10 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
               shipSegments={getVisibleRightShipSegments()}
               shots={rightFieldShots}
               sunkShips={sunkRightShips}
+              onCellShot={handleRightFieldShot}
+              isHumanTurn={isHumanTurn}
+              gameStarted={gameStarted}
+              isRightField={true}
             />
           </View>
         </View>

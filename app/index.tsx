@@ -279,6 +279,101 @@ export default function GameScreen() {
     };
   };
 
+  // Function to handle shots from cell clicks
+  const handleCellShot = (coordinate: string) => {
+    // The same logic as handleSubmit but with the coordinate passed from the cell
+    if (!gameStarted) {
+      setModalMessage("Please start the game first.");
+      setModalVisible(true);
+      return;
+    }
+
+    if (!isHumanTurn) {
+      setModalMessage("It's not your turn! Please wait for the bot to play.");
+      setModalVisible(true);
+      return;
+    }
+
+    const normalizedCoord = coordinate.toUpperCase();
+
+    // Check if this coordinate was already shot at
+    if (
+      gameBoardRef.current &&
+      gameBoardRef.current.getRightFieldShots()[normalizedCoord]
+    ) {
+      setModalMessage(
+        `You already fired at ${normalizedCoord}. Try a different coordinate.`
+      );
+      setModalVisible(true);
+      return;
+    }
+
+    if (gameBoardRef.current) {
+      const botShips = gameBoardRef.current.getRightPlayerShips();
+
+      const result = checkForHit(normalizedCoord, botShips);
+
+      // Record the shot in the game board
+      gameBoardRef.current.recordShot(
+        normalizedCoord,
+        result.hit ? "hit" : "miss",
+        true, // true means it's the player's shot
+        result.isSunk, // pass whether the ship is sunk
+        result.shipName // pass the ship name (only used if isSunk is true)
+      );
+
+      // Show hit notification if it's a hit
+      if (result.hit) {
+        setHitNotification({
+          visible: true,
+          message: result.message,
+          shipName: result.shipName,
+          isSunk: result.isSunk,
+        });
+      }
+
+      // Display result message
+      setModalMessage(result.message);
+      setModalVisible(true);
+
+      // Clear the coordinate input
+      setCoordinate("");
+
+      // Human's turn is done, switch to bot's turn
+      setIsHumanTurn(false);
+
+      // Simulate bot's turn after a delay
+      setTimeout(() => {
+        // Bot makes a random shot
+        const botShot = generateBotShot();
+        if (botShot) {
+          const playerShips = gameBoardRef.current.getLeftPlayerShips();
+          const botShotResult = checkBotShot(botShot, playerShips);
+
+          // Record bot's shot
+          gameBoardRef.current.recordShot(
+            botShot,
+            botShotResult.hit ? "hit" : "miss",
+            false, // false means it's the bot's shot
+            botShotResult.isSunk,
+            botShotResult.shipName
+          );
+
+          console.log(
+            `Bot fired at ${botShot}: ${botShotResult.hit ? "HIT" : "MISS"}${
+              botShotResult.isSunk ? " and SUNK!" : ""
+            }`
+          );
+        }
+
+        setIsHumanTurn(true); // Switch back to human turn
+      }, 2000);
+    } else {
+      setModalMessage("Game not initialized yet. Please wait.");
+      setModalVisible(true);
+    }
+  };
+
   const handleGameStart = () => {
     setGameStarted(true);
   };
@@ -312,7 +407,12 @@ export default function GameScreen() {
         />
       </View>
 
-      <GameBoard ref={gameBoardRef} onGameStart={handleGameStart} />
+      <GameBoard
+        ref={gameBoardRef}
+        onGameStart={handleGameStart}
+        isHumanTurn={isHumanTurn}
+        onCellShot={handleCellShot}
+      />
 
       {/* Hit Notification */}
       {hitNotification.visible && (
