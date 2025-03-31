@@ -208,7 +208,8 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
     // Function to handle cell shots on the right field (opponent's field)
     const handleRightFieldShot = (coordinate: string) => {
       // Only allow shots if it's the player's turn and the game has started
-      if (!isHumanTurn || !gameStarted) return;
+      // Also prevent shots if any side has 5 sunk ships (game over)
+      if (!isHumanTurn || !gameStarted || sunkRightShips.length === 5 || sunkLeftShips.length === 5) return;
 
       // Check if this coordinate was already shot at
       if (rightFieldShots[coordinate]) return;

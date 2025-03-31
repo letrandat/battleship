@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { StyleSheet, View, Animated } from "react-native";
+import { StyleSheet, View, Animated, TouchableOpacity } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { GameBoard } from "@/components/GameBoard";
@@ -208,7 +208,7 @@ export default function GameScreen() {
 
   // Function to handle shots from cell clicks
   const handleCellShot = (coordinate: string, isHit: boolean) => {
-    if (!gameStarted || !isHumanTurn) {
+    if (!gameStarted || !isHumanTurn || gameOver) {
       return;
     }
 
@@ -265,7 +265,7 @@ export default function GameScreen() {
 
   // Function to handle bot's turn
   const handleBotTurn = () => {
-    if (!gameBoardRef.current) return;
+    if (!gameBoardRef.current || gameOver) return;
 
     let botContinuesTurn = true;
 
@@ -322,6 +322,25 @@ export default function GameScreen() {
     setGameStarted(true);
   };
 
+  // Function to restart the game
+  const handleRestartGame = () => {
+    // Reset game states
+    setGameOver(false);
+    setGameOverMessage("");
+    setGameStarted(false);
+    setIsHumanTurn(true);
+    setHitNotification({ visible: false, message: "", shipName: null, isSunk: false });
+    
+    // Reset the game board (will trigger a new ship placement when "Start Game" is pressed)
+    if (gameBoardRef.current) {
+      // Re-render the GameBoard which will reset its internal state
+      gameBoardRef.current = null;
+      setTimeout(() => {
+        setGameStarted(false);
+      }, 0);
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.statusContainer}>
@@ -331,7 +350,7 @@ export default function GameScreen() {
             isHumanTurn ? styles.activeStatus : styles.inactiveStatus,
           ]}
         >
-          {isHumanTurn ? "Your Turn" : "Bot Turn"}
+          {gameOver ? "Game Over" : (isHumanTurn ? "Your Turn" : "Bot Turn")}
         </ThemedText>
       </View>
 
@@ -373,6 +392,14 @@ export default function GameScreen() {
           <ThemedText style={styles.gameOverText}>
             {gameOverMessage}
           </ThemedText>
+          <TouchableOpacity 
+            style={styles.restartButton}
+            onPress={handleRestartGame}
+          >
+            <ThemedText style={styles.restartButtonText}>
+              Play Again
+            </ThemedText>
+          </TouchableOpacity>
         </Animated.View>
       )}
     </ThemedView>
@@ -458,5 +485,20 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
+    marginBottom: 20,
+  },
+  restartButton: {
+    backgroundColor: "#4a90e2",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginTop: 15,
+    borderWidth: 2,
+    borderColor: "white",
+  },
+  restartButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 22,
   },
 });
