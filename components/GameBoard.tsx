@@ -64,7 +64,16 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
 
           // If a ship was sunk, add it to the list of sunk ships
           if (isSunk && shipName && !sunkRightShips.includes(shipName)) {
-            setSunkRightShips((prev) => [...prev, shipName]);
+            setSunkRightShips((prev) => {
+              const newSunkShips = [...prev, shipName];
+              // Check for player victory (all 5 enemy ships sunk)
+              if (newSunkShips.length === 5) {
+                console.log("🎮 GAME OVER: You've won! All enemy ships are destroyed!");
+                alert("You've won! All enemy ships are destroyed!");
+              }
+              return newSunkShips;
+            });
+            console.log(`💥 SHIP SUNK: Player has sunk the enemy's ${shipName}!`);
           }
         } else {
           // Bot shot at the left field
@@ -79,7 +88,16 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
 
           // If a ship was sunk, add it to the list of sunk ships
           if (isSunk && shipName && !sunkLeftShips.includes(shipName)) {
-            setSunkLeftShips((prev) => [...prev, shipName]);
+            setSunkLeftShips((prev) => {
+              const newSunkShips = [...prev, shipName];
+              // Check for bot victory (all 5 player ships sunk)
+              if (newSunkShips.length === 5) {
+                console.log("🎮 GAME OVER: Bot has won! All your ships are destroyed!");
+                alert("Game over! The enemy has destroyed all your ships!");
+              }
+              return newSunkShips;
+            });
+            console.log(`💥 SHIP SUNK: Enemy has sunk your ${shipName}!`);
           }
         }
       },

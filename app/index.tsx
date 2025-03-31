@@ -8,6 +8,8 @@ import { Ship } from "@/components/Ship";
 export default function GameScreen() {
   const [isHumanTurn, setIsHumanTurn] = useState(true); // Human starts first
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [gameOverMessage, setGameOverMessage] = useState("");
   const [hitNotification, setHitNotification] = useState<{
     visible: boolean;
     message: string;
@@ -18,6 +20,8 @@ export default function GameScreen() {
   // Animation values
   const notificationOpacity = useRef(new Animated.Value(0)).current;
   const notificationScale = useRef(new Animated.Value(0.5)).current;
+  const gameOverOpacity = useRef(new Animated.Value(0)).current;
+  const gameOverScale = useRef(new Animated.Value(0.5)).current;
 
   const gameBoardRef = useRef<any>(null);
 
@@ -56,6 +60,47 @@ export default function GameScreen() {
       return () => clearTimeout(timer);
     }
   }, [hitNotification.visible]);
+
+  // Check after each shot if the game is over
+  useEffect(() => {
+    if (gameBoardRef.current) {
+      const sunkRightShips = gameBoardRef.current.getSunkRightShips();
+      const sunkLeftShips = gameBoardRef.current.getSunkLeftShips();
+      
+      if (sunkRightShips.length === 5) {
+        // Player won
+        setGameOver(true);
+        setGameOverMessage("Victory! You've destroyed all enemy ships!");
+        animateGameOver();
+      } else if (sunkLeftShips.length === 5) {
+        // Bot won
+        setGameOver(true);
+        setGameOverMessage("Defeat! All your ships have been destroyed!");
+        animateGameOver();
+      }
+    }
+  }, [gameBoardRef.current?.getSunkRightShips(), gameBoardRef.current?.getSunkLeftShips()]);
+
+  // Animate game over message
+  const animateGameOver = () => {
+    // Reset animation values
+    gameOverOpacity.setValue(0);
+    gameOverScale.setValue(0.5);
+
+    // Animate in
+    Animated.parallel([
+      Animated.timing(gameOverOpacity, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(gameOverScale, {
+        toValue: 1,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const checkForHit = (coord: string, botShips: Ship[]) => {
     // Normalize coordinate to uppercase
@@ -199,6 +244,11 @@ export default function GameScreen() {
           isSunk: result.isSunk,
         });
 
+        // Log detailed information if a ship was sunk
+        if (result.isSunk) {
+          console.log(`🎯 PLAYER ACTION: Sunk enemy ${result.shipName} ship at coordinate ${normalizedCoord}!`);
+        }
+
         // Player gets to go again after a hit
         return;
       }
@@ -240,6 +290,11 @@ export default function GameScreen() {
             botShotResult.isSunk ? " and SUNK!" : ""
           }`
         );
+
+        // Add more detailed log if a ship was sunk
+        if (botShotResult.isSunk) {
+          console.log(`🎯 BOT ACTION: Sunk player's ${botShotResult.shipName} ship at coordinate ${botShot}!`);
+        }
 
         // Bot continues turn if it was a hit
         botContinuesTurn = botShotResult.hit;
@@ -303,6 +358,23 @@ export default function GameScreen() {
           </ThemedText>
         </Animated.View>
       )}
+
+      {/* Game Over Message */}
+      {gameOver && (
+        <Animated.View
+          style={[
+            styles.gameOverNotification,
+            {
+              opacity: gameOverOpacity,
+              transform: [{ scale: gameOverScale }],
+            },
+          ]}
+        >
+          <ThemedText style={styles.gameOverText}>
+            {gameOverMessage}
+          </ThemedText>
+        </Animated.View>
+      )}
     </ThemedView>
   );
 }
@@ -353,6 +425,35 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 22,
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  gameOverNotification: {
+    position: "absolute",
+    top: "40%",
+    alignSelf: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    padding: 25,
+    borderRadius: 15,
+    minWidth: "80%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.7,
+    shadowRadius: 8,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: "gold",
+  },
+  gameOverText: {
+    color: "gold",
+    fontWeight: "bold",
+    fontSize: 28,
     textAlign: "center",
     textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: 1, height: 1 },
