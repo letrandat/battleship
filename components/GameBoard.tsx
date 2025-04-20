@@ -15,7 +15,7 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
     const [gameStarted, setGameStarted] = useState(false);
     const [leftPlayerShips, setLeftPlayerShips] = useState<Ship[]>([]);
     const [rightPlayerShips, setRightPlayerShips] = useState<Ship[]>([]);
-    const [leftShipCoordinates, setLeftShipCoordinates] = useState<string[]>(
+    const [_leftShipCoordinates, setLeftShipCoordinates] = useState<string[]>(
       []
     );
     const [rightShipCoordinates, setRightShipCoordinates] = useState<string[]>(
@@ -190,7 +190,7 @@ export const GameBoard = forwardRef<any, GameBoardProps>(
                 // Show if segment is damaged or if ship is completely sunk
                 segment.status === "damaged" || isShipSunk
             )
-            .map((segment, _, array) => ({
+            .map((segment, _, _array) => ({
               ...segment,
               shipName: ship.name,
               // Only show head/tail when ship is fully sunk
