@@ -1,12 +1,12 @@
 import React from "react";
 import {
   StyleSheet,
-  View,
   Text,
-  ViewStyle,
   TouchableOpacity,
+  View,
+  ViewStyle,
 } from "react-native";
-import { ShipSegment, SHIP_COLORS } from "./Ship";
+import { SHIP_COLORS, ShipSegment } from "./Ship";
 
 type ShotInfo = {
   result: "hit" | "miss";
